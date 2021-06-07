@@ -1,5 +1,5 @@
 # mhsample-in-R
-Metropolis-Hastings sample in R. Just like the `mhsample` in MATLAB.
+Metropolis-Hastings sampling in R. Just like the `mhsample` in MATLAB.
 
 The `mhsample` function is in the file `mhsample.R`.
 
