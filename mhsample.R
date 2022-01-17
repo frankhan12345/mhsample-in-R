@@ -3,7 +3,9 @@
 #   start: start value of the Markov chain.
 #   nsample: number of samples to be generated.
 #   pdf: the target distribution density.
+#   logpdf: the log of "pdf".
 #   proppdf: the proposal distribution density.
+#   logproppdf: the log of "proppdf".
 #   proprnd: the proposal distribution sampler.
 #   symmetric: a logical value indicating whether the proposal distribution is symmetric. The default value is FALSE. If it is TRUE (i.e., proppdf is symmetric), proppdf is optional.
 #   burnin: burnin number. The default value is 0.
@@ -16,7 +18,9 @@ mhsample <- function(start, nsample, ...) {
   # Parse input
   varargin <- list(...)
   pdf <- varargin$pdf
+  logpdf <- varargin$logpdf
   proppdf <- varargin$proppdf
+  logproppdf <- varargin$logproppdf
   proprnd <- varargin$proprnd
   sym <- if (is.null(varargin$symmetric)) FALSE else varargin$symmetric
   burnin <- if (is.null(varargin$burnin)) 0 else varargin$burnin
@@ -28,6 +32,10 @@ mhsample <- function(start, nsample, ...) {
     start <- array(start, c(1,length(start)))
   }
   nDim <- ncol(start)
+  if (is.null(logpdf))
+    logpdf <- function(x) log(pdf(x))
+  if (is.null(logproppdf))
+    logproppdf <- function(x,y) log(proppdf(x,y))
   
   # Perform Metropolis-Hasting algorithm
   smpl <- array(0, dim = c(nsample, nDim))
@@ -43,9 +51,9 @@ mhsample <- function(start, nsample, ...) {
   for (i in (1 - burnin):(nsample * thin)) {
     y <- array(proprnd(x0), c(1,nDim))
     if (sym) {
-      rho <- log(pdf(y)) - log(pdf(x0))
+      rho <- logpdf(y) - logpdf(x0)
     } else {
-      rho <- log(pdf(y)) - log(pdf(x0)) + log(proppdf(x0, y)) - log(proppdf(y, x0))
+      rho <- logpdf(y) - logpdf(x0) + logproppdf(x0, y) - logproppdf(y, x0)
     }
     Ui <- U[i + burnin]
     acc <- Ui <= min(0, rho)
